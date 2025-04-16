@@ -2,6 +2,7 @@ package com.example.proj3.controller;
 
 import com.example.proj3.model.VideoGame;
 import com.example.proj3.service.VideoGameService;
+import com.example.proj3.service.RawgApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,12 @@ import java.util.Optional;
 public class VideoGameController {
 
     private final VideoGameService videoGameService;
+    private final RawgApiService rawgApiService;
 
     @Autowired
-    public VideoGameController(VideoGameService videoGameService) {
+    public VideoGameController(VideoGameService videoGameService, RawgApiService rawgApiService) {
         this.videoGameService = videoGameService;
+        this.rawgApiService = rawgApiService;
     }
 
     //gets all games
@@ -90,6 +93,16 @@ public class VideoGameController {
         } catch (Exception e) {
             response.put("message", "Failed to save game: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/fetchFromRawg")
+    public ResponseEntity<?> fetchGamesFromRawg() {
+        try {
+            List<VideoGame> games = rawgApiService.fetchGamesFromRawg();
+            return ResponseEntity.ok(games);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to fetch games: " + e.getMessage());
         }
     }
 }
