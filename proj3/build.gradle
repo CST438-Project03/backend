@@ -26,6 +26,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.postgresql:postgresql:42.6.0'
 
 	//JWT security
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -35,6 +36,7 @@ dependencies {
 
 	// Database
 	runtimeOnly 'com.mysql:mysql-connector-j'
+
 }
 
 tasks.named('test') {
