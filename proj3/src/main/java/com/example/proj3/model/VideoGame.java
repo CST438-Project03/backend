@@ -23,6 +23,11 @@ public class VideoGame {
     private String imageUrl;
     private String rawgId;
 
+    public VideoGame() {
+        // Default constructor required by JPA
+    }
+
+
     public VideoGame(Long id, String title, String genre, String imageUrl, String rawgId) {
         this.id = id;
         this.title = title;

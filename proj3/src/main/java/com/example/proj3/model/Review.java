@@ -28,6 +28,10 @@ public class Review {
 
     private String comment;
 
+    public Review(){
+
+    }
+
     public Review(User user, VideoGame videoGame, int rating, String comment) {
         this.user = user;
         this.videoGame = videoGame;

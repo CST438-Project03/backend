@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.JoinColumn;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import com.example.proj3.model.VideoGame;
 
@@ -34,11 +35,15 @@ public class UserGameList {
     @ManyToMany
     private List<VideoGame> videoGames;
 
+    public UserGameList() {
+    }
+
+
     public UserGameList(String name, User user) {
-        this.id = id;
+        //this.id = id;
         this.name = name;
         this.user = user;
-        this.videoGames = videoGames;
+        this.videoGames = new ArrayList<>();;
     }
 
     //setters and getters

@@ -166,7 +166,7 @@ public class ReviewController {
         }
     }
 
-    //delete review
+    //delete review not currently working
     @DeleteMapping("delete/{reviewId}")
     public ResponseEntity<?> deleteReview(
             @PathVariable Long reviewId,

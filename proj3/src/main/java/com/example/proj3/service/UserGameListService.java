@@ -65,7 +65,7 @@ public class UserGameListService {
         listRepo.save(list);
     }
 
-    // Delete a list if owned by the user
+    // Delete a list if owned by the user, not currently working will fix
     public void deleteList(Long listId, User user) {
         Optional<UserGameList> listOpt = listRepo.findById(listId);
         if (listOpt.isEmpty()) {
