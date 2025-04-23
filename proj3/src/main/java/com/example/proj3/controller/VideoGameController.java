@@ -45,11 +45,11 @@ public class VideoGameController {
     }
 
     //get a game by its id
-    @GetMapping("getGameById/{id}")
+    @GetMapping("/getGameById/{id}")
     public ResponseEntity<?> getGameById(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-
         try {
+            System.out.println("Fetching game with ID: " + id); // Debugging log
             Optional<VideoGame> gameOpt = videoGameService.findById(id);
 
             if (gameOpt.isPresent()) {
@@ -57,10 +57,12 @@ public class VideoGameController {
                 response.put("game", gameOpt.get());
                 return ResponseEntity.ok(response);
             } else {
+                System.out.println("Game not found for ID: " + id); // Debugging log
                 response.put("message", "Game not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
+            System.out.println("Error fetching game: " + e.getMessage()); // Debugging log
             response.put("message", "Failed to retrieve game: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -97,12 +99,24 @@ public class VideoGameController {
     }
 
     @GetMapping("/fetchFromRawg")
-    public ResponseEntity<?> fetchGamesFromRawg() {
+    public ResponseEntity<?> fetchGamesFromRawg(
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "18") int pageSize
+    ) {
         try {
-            List<VideoGame> games = rawgApiService.fetchGamesFromRawg();
-            return ResponseEntity.ok(games);
+            // Fetch games from RAWG API
+            List<VideoGame> games = rawgApiService.fetchGamesFromRawg(page, pageSize);
+            int totalGames = rawgApiService.getTotalGames(); // Total number of games
+            int totalPages = (int) Math.ceil((double) totalGames / pageSize);
+
+            // Prepare response
+            Map<String, Object> response = new HashMap<>();
+            response.put("games", games);
+            response.put("totalPages", totalPages);
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to fetch games: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching games: " + e.getMessage());
         }
     }
 }
