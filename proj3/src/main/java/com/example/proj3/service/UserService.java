@@ -1,7 +1,7 @@
 package com.example.proj3.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import com.example.proj3.model.User;
 
 import com.example.proj3.repository.UserRepository;
@@ -32,7 +32,8 @@ public class UserService {
      * @return The user with the specified username, or null if not found
      */
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 
         /**
