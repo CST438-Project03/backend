@@ -1,9 +1,11 @@
 package com.example.proj3.service;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import com.example.proj3.model.User;
-
 import com.example.proj3.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
@@ -12,14 +14,15 @@ import jakarta.transaction.Transactional;
 public class UserService {
     @Autowired
     private UserRepository userRepository;
-
-
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Finds a user by their ID.
      *
      * @param id The user ID
-     * @return An Optional containing the user if found, or empty if not found
+     * @return The user if found, or null if not found
      */
     public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
@@ -36,7 +39,7 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 
-        /**
+    /**
      * Finds a user by their email address.
      *
      * @param email The email to search for
@@ -70,11 +73,15 @@ public class UserService {
      * Creates a new user.
      *
      * @param user The user entity to create
-     * @return The created user with ID assigned
+     * @return true if user was created successfully, false otherwise
      */
     @Transactional
     public boolean createUser(User user) {
        try {
+           // Ensure password is encoded before saving
+           if (user.getPassword() != null) {
+               user.setPassword(user.getPassword());
+           }
            userRepository.save(user);
            return true;
        } catch (Exception e) {
@@ -82,7 +89,6 @@ public class UserService {
        }
     }
 
-    
     /**
      * Deletes a user by their ID.
      *
@@ -91,12 +97,146 @@ public class UserService {
      */
     @Transactional
     public boolean deleteUser(Long id) {
-
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Updates all fields of an existing user.
+     *
+     * @param id The ID of the user to update
+     * @param user The user entity with updated values
+     * @return The updated user, or null if the user doesn't exist
+     */
+    @Transactional
+    public User updateUser(Long id, User user) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User updatedUser = userOpt.get();
+            
+            // Update fields if they are provided
+            if (user.getUsername() != null) {
+                updatedUser.setUsername(user.getUsername());
+            }
+            
+            if (user.getEmail() != null) {
+                updatedUser.setEmail(user.getEmail());
+            }
+            
+            // Only update password if it's provided and not already encoded
+            if (user.getPassword() != null) {
+                // Check if password is already encoded - if it contains "$2a$" it's likely already a BCrypt hash
+                if (!user.getPassword().startsWith("$2a$")) {
+                    updatedUser.setPassword(passwordEncoder.encode(user.getPassword()));
+                } else {
+                    updatedUser.setPassword(user.getPassword());
+                }
+            }
+            
+            // Only update admin status if it's explicitly set
+            updatedUser.setAdmin(user.isAdmin());
+            
+            // Update profile picture if provided
+            if (user.getProfilePicture() != null) {
+                updatedUser.setProfilePicture(user.getProfilePicture());
+            }
+            
+            return userRepository.save(updatedUser);
+        }
+        return null;
+    }  
+
+    /**
+     * Updates a user's password after verifying the current password
+     * 
+     * @param id User ID
+     * @param currentPassword The current password for verification
+     * @param newPassword The new password to set
+     * @return true if password was updated successfully, false otherwise
+     */
+    @Transactional
+    public boolean updatePassword(Long id, String currentPassword, String newPassword) {
+        User user = getUserById(id);
+        
+        if (user == null) {
+            return false;
+        }
+        
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+        
+        // Set new password (encode it first)
+        user.setPassword(passwordEncoder.encode(newPassword));
+        
+        // Save user
+        try {
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Resets a user's password without requiring current password verification
+     * This method should only be called by admins
+     * 
+     * @param id The user ID
+     * @param newPassword The new password to set
+     * @return true if password was reset successfully, false otherwise
+     */
+    @Transactional
+    public boolean resetPassword(Long id, String newPassword) {
+        User user = getUserById(id);
+        
+        if (user == null) {
+            return false;
+        }
+        
+        // Set new password (encode it first)
+        user.setPassword(passwordEncoder.encode(newPassword));
+        
+        // Save user
+        try {
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Verifies if the provided password matches the user's stored password
+     *
+     * @param username The username to check
+     * @param password The password to verify
+     * @return true if the password matches, false otherwise
+     */
+    public boolean verifyUserPassword(String username, String password) {
+        User user = getUserByUsername(username);
+        if (user == null) {
+            return false;
+        }
+        return passwordEncoder.matches(password, user.getPassword());
+    }
+    
+    /**
+     * Verify if the provided password matches the user's stored password
+     * 
+     * @param user The user object
+     * @param rawPassword The raw password to verify
+     * @return true if password matches, false otherwise
+     */
+    public boolean verifyPassword(User user, String rawPassword) {
+        if (user == null || rawPassword == null) {
+            return false;
+        }
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
     /**
@@ -107,8 +247,8 @@ public class UserService {
      */
     @Transactional
     public boolean logoutUser(Long id) {
-        
+        // This method doesn't need to do anything at the service level
+        // JWT invalidation should be handled by the authentication service
         return true;
     }
-
 }
