@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 @Entity
 public class VideoGame {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // or RAWG id can be switched
 
     private String title;

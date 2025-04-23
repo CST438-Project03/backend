@@ -2,6 +2,7 @@ package com.example.proj3.controller;
 
 import com.example.proj3.model.Review;
 import com.example.proj3.model.User;
+import com.example.proj3.service.UserService;
 import com.example.proj3.model.VideoGame;
 import com.example.proj3.service.ReviewService;
 import com.example.proj3.service.VideoGameService;
@@ -10,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.userdetails.UserDetails;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,11 +25,13 @@ public class ReviewController {
 
     private final ReviewService reviewService;
     private final VideoGameService videoGameService;
+    private final  UserService userService;
 
     @Autowired
-    public ReviewController(ReviewService reviewService, VideoGameService videoGameService) {
+    public ReviewController(ReviewService reviewService, VideoGameService videoGameService, UserService userService) {
         this.reviewService = reviewService;
         this.videoGameService = videoGameService;
+        this.userService = userService;
     }
 
     //creates review
@@ -35,9 +40,27 @@ public class ReviewController {
             @PathVariable Long gameId,
             @RequestParam Integer rating,
             @RequestParam String comment,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         Map<String, Object> response = new HashMap<>();
+
+        if (userDetails == null) {
+            response.put("message", "You must be logged in to submit a review");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        // Attempt to retrieve the full User entity
+        User user = userService.getUserByUsername(userDetails.getUsername());
+        System.out.println("Looking up user: " + userDetails.getUsername());
+        System.out.println("Found user: " + (user != null ? user.getUsername() : "null"));
+
+        if (user == null) {
+            response.put("message", "Authenticated user not found in the database");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        System.out.println("Incoming rating: " + rating);
+        System.out.println("Incoming comment: " + comment);
 
         // Validate rating
         if (rating == null || rating < 1 || rating > 10) {
@@ -53,12 +76,22 @@ public class ReviewController {
 
         try {
             Optional<VideoGame> gameOpt = videoGameService.findById(gameId);
+            VideoGame videoGame;
+
             if (gameOpt.isEmpty()) {
-                response.put("message", "Game not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                // Game not in DB — fetch from RAWG and save
+                try {
+                    videoGame = videoGameService.fetchAndSaveFromRawg(gameId);
+                    System.out.println("Fetched game from RAWG and saved: " + videoGame.getTitle());
+                } catch (Exception e) {
+                    response.put("message", "Failed to fetch and save game: " + e.getMessage());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+            } else {
+                videoGame = gameOpt.get();
             }
 
-            Review review = reviewService.createReview(user, gameOpt.get(), rating, comment);
+            Review review = reviewService.createReview(user, videoGame, rating, comment);
 
             response.put("message", "Review created successfully");
             response.put("review", review);
@@ -76,6 +109,7 @@ public class ReviewController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
 
     //gets reviews for specfic game
     @GetMapping("/game/{gameId}")
