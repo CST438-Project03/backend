@@ -31,9 +31,9 @@ public class UserGameListService {
     }
 
     // Creates a new game list for a given username
-    public UserGameList createList(String name, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public UserGameList createList(String name, User user) {
+       // User user = userRepository.findByUsername(username)
+         //       .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         UserGameList list = new UserGameList(name, user);
         return listRepo.save(list);

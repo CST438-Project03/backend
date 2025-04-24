@@ -36,10 +36,10 @@ public class UserGameListController {
     }
 
     //create lists
-    @PostMapping("createList")
+    @PostMapping("/createList")
     public ResponseEntity<?> createList(
             @RequestParam String name,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         if (name == null || name.trim().isEmpty()) {
             Map<String, String> response = new HashMap<>();
@@ -48,7 +48,10 @@ public class UserGameListController {
         }
 
         try {
-            UserGameList newList = listService.createList(name, user.getUsername());
+            User user = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            UserGameList newList = listService.createList(name, user);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "List created successfully");
             response.put("list", newList);
