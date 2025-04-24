@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.example.proj3.repository.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,12 +25,16 @@ public class UserGameListController {
 
     private final UserGameListService listService;
     private final VideoGameService videoGameService;
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Autowired
     public UserGameListController(UserGameListService listService, VideoGameService videoGameService) {
         this.listService = listService;
         this.videoGameService = videoGameService;
     }
+
     //create lists
     @PostMapping("createList")
     public ResponseEntity<?> createList(
@@ -41,7 +48,7 @@ public class UserGameListController {
         }
 
         try {
-            UserGameList newList = listService.createList(name, user);
+            UserGameList newList = listService.createList(name, user.getUsername());
             Map<String, Object> response = new HashMap<>();
             response.put("message", "List created successfully");
             response.put("list", newList);
@@ -55,8 +62,10 @@ public class UserGameListController {
 
     //gets all lists from user
     @GetMapping("/getUserLists")
-    public ResponseEntity<?> getUserLists(@AuthenticationPrincipal User user) {
+    public ResponseEntity<?> getUserLists(@AuthenticationPrincipal UserDetails userDetails) {
         try {
+            Optional<User> userOpt = userRepository.findByUsername(userDetails.getUsername());
+            User user = userOpt.orElseThrow(() -> new UsernameNotFoundException("User not found"));
             List<UserGameList> lists = listService.getUserLists(user);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Lists retrieved successfully");
@@ -130,29 +139,32 @@ public class UserGameListController {
     @DeleteMapping("deleteList/{listId}")
     public ResponseEntity<?> deleteList(
             @PathVariable Long listId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Map<String, String> response = new HashMap<>();
+
+        Optional<User> optionalUser = userRepository.findByUsername(userDetails.getUsername());
+        if (!optionalUser.isPresent()) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
 
         try {
-
-            listService.deleteList(listId, user);
-
-            Map<String, String> response = new HashMap<>();
+            listService.deleteList(listId, optionalUser.get());
             response.put("message", "List deleted successfully");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
 
-            // Check message to determine the appropriate status
             if (e.getMessage().contains("List not found")) {
-                response.put("message", "List not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             } else if (e.getMessage().contains("You can only delete")) {
-                response.put("message", "You can only delete your own lists");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             } else {
-                response.put("message", "Failed to delete list: " + e.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         }
     }
+
+
 }

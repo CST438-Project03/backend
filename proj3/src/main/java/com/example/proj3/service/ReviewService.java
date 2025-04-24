@@ -23,6 +23,9 @@ public class ReviewService {
     }
     //Create a new review if it doesn't already exist for the user and game
     public Review createReview(User user, VideoGame videoGame, int rating, String comment) {
+        System.out.println("Creating review: user=" + user.getUsername() + ", game=" + videoGame.getId() + ", rating=" + rating + ", comment=" + comment);
+
+
         Optional<Review> existing = reviewRepo.findByUserAndVideoGame(user, videoGame);
         if (existing.isPresent()) {
             throw new RuntimeException("Review already exists");

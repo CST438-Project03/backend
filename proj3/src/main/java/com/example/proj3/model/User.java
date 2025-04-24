@@ -31,6 +31,10 @@ public class User {
 
     @NotNull(message = "Role is required")
     boolean isAdmin;
+    
+
+    @Column(name = "profile_picture")
+    private String profilePicture;
 
     // Getters and Setters
 
@@ -72,5 +76,13 @@ public class User {
 
     public void setAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
+    }
+    
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+    
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }
