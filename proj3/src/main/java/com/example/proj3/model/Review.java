@@ -14,7 +14,8 @@ import jakarta.persistence.JoinColumn;
 
 @Entity
 public class Review {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
@@ -22,6 +23,7 @@ public class Review {
     private User user;
 
     @ManyToOne
+    @JoinColumn(name = "video_game_id")
     private VideoGame videoGame;
 
     private int rating;

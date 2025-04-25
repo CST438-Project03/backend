@@ -286,6 +286,116 @@ public class UserController {
         }
     }
 
+    /**
+    * Check password status endpoint
+    */
+    @GetMapping("/password/status")
+    public ResponseEntity<?> checkPasswordStatus(Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>("User not authenticated", HttpStatus.UNAUTHORIZED);
+        }
+    
+        User user = userService.getUserByUsername(principal.getName());
+        if (user == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    
+        Map<String, Object> response = new HashMap<>();
+        response.put("isOAuthUser", user.isOAuthUser());
+        response.put("hasSetPassword", user.getPasswordSetDate() != null);
+        response.put("oauthProvider", user.getOauthProvider());
+    
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Create/set password for OAuth users endpoint
+    */
+    @PostMapping("/password/create")
+    public ResponseEntity<?> createPassword(
+        @RequestBody Map<String, String> passwordData,
+        Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>("User not authenticated", HttpStatus.UNAUTHORIZED);
+        }
+    
+        User user = userService.getUserByUsername(principal.getName());
+        if (user == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    
+        String currentPassword = passwordData.get("currentPassword");
+        String newPassword = passwordData.get("newPassword");
+    
+        if (newPassword == null || newPassword.isEmpty()) {
+            return new ResponseEntity<>("New password is required", HttpStatus.BAD_REQUEST);
+        }
+    
+        // Check if user is OAuth user and hasn't set a password yet
+        boolean skipCurrentPasswordCheck = user.isOAuthUser() && user.getPasswordSetDate() == null;
+    
+        // For regular users or OAuth users who have already set a password,
+        // validate the current password
+        if (!skipCurrentPasswordCheck) {
+            if (currentPassword == null || currentPassword.isEmpty()) {
+                return new ResponseEntity<>("Current password is required", HttpStatus.BAD_REQUEST);
+            }
+        
+            boolean passwordMatches = userService.checkPassword(user.getId(), currentPassword);
+            if (!passwordMatches) {
+                return new ResponseEntity<>("Current password is incorrect", HttpStatus.BAD_REQUEST);
+            }
+        }
+    
+        // Update password and passwordSetDate
+        boolean updated = userService.setPassword(user.getId(), newPassword);
+    
+        if (updated) {
+            return new ResponseEntity<>("Password set successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Failed to set password", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+    * Request password reset endpoint
+    */
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<?> requestPasswordReset(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+    
+        if (email == null || email.isEmpty()) {
+            return new ResponseEntity<>("Email is required", HttpStatus.BAD_REQUEST);
+        }
+    
+        // Process the reset request
+        // Note: For security, always return the same response regardless of whether the email exists
+        boolean processed = userService.requestPasswordReset(email);
+    
+        return new ResponseEntity<>("If your email is registered, you will receive password reset instructions", HttpStatus.OK);
+    }
+
+/**
+ * Confirm password reset endpoint
+ */
+@PostMapping("/password/reset-confirm")
+public ResponseEntity<?> confirmPasswordReset(@RequestBody Map<String, String> request) {
+    String token = request.get("token");
+    String newPassword = request.get("newPassword");
+    
+    if (token == null || token.isEmpty() || newPassword == null || newPassword.isEmpty()) {
+        return new ResponseEntity<>("Token and new password are required", HttpStatus.BAD_REQUEST);
+    }
+    
+    boolean reset = userService.confirmPasswordReset(token, newPassword);
+    
+    if (reset) {
+        return new ResponseEntity<>("Password has been reset successfully", HttpStatus.OK);
+    } else {
+        return new ResponseEntity<>("Invalid or expired token", HttpStatus.BAD_REQUEST);
+    }
+}
+
     
     // Delete user - admins or own user only
     @DeleteMapping("/deleteUser/{id}")

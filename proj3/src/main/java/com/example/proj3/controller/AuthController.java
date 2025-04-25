@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +41,24 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+    }
+
+    @GetMapping("/oauth2/redirect")
+    public ResponseEntity<?> handleOAuthRedirect(@RequestParam String token) {
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        response.put("message", "Successfully authenticated via OAuth2");
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/oauth2/error")
+    public ResponseEntity<?> handleOAuthError(@RequestParam String error) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", error);
+        
+        return ResponseEntity.status(401).body(response);
     }
     
   @PostMapping("/login")

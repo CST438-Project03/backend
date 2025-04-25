@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### OAuth2 ID and Secret ###
+application-secrets.properties
+.env
