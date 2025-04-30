@@ -25,7 +25,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
     private final VideoGameService videoGameService;
-    private final  UserService userService;
+    private final UserService userService;
 
     @Autowired
     public ReviewController(ReviewService reviewService, VideoGameService videoGameService, UserService userService) {
@@ -139,10 +139,23 @@ public class ReviewController {
 
     //gets all reviews from a user
     @GetMapping("all/user")
-    public ResponseEntity<?> getUserReviews(@AuthenticationPrincipal User user) {
+    public ResponseEntity<?> getUserReviews(@AuthenticationPrincipal UserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            if (userDetails == null) {
+                response.put("message", "Not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Fetch full User entity
+            User user = userService.getUserByUsername(userDetails.getUsername());
+
+            if (user == null) {
+                response.put("message", "Authenticated user not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
             List<Review> reviews = reviewService.getUserReviews(user);
 
             response.put("message", "User reviews retrieved successfully");
@@ -155,47 +168,47 @@ public class ReviewController {
         }
     }
 
+
     //edit reveiew
     @PutMapping("edit/{reviewId}")
     public ResponseEntity<?> editReview(
             @PathVariable Long reviewId,
-            @RequestParam Integer rating,
-            @RequestParam String comment,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, Object> payload) {
 
         Map<String, Object> response = new HashMap<>();
 
-        // Validate rating
-        if (rating == null || rating < 1 || rating > 10) {
-            response.put("message", "Rating must be between 1 and 5");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // Validate comment
-        if (comment == null || comment.trim().isEmpty()) {
-            response.put("message", "Comment cannot be empty");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        System.out.println("UserDetails: " + (userDetails != null ? userDetails.getUsername() : "null"));
 
         try {
+            if (userDetails == null) {
+                response.put("message", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Extract rating and comment from JSON payload
+            Integer rating = (Integer) payload.get("rating");
+            String comment = (String) payload.get("comment");
+
+            if (rating == null || comment == null || comment.trim().isEmpty()) {
+                response.put("message", "Invalid rating or comment");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            User user = userService.getUserByUsername(userDetails.getUsername());
+            if (user == null) {
+                response.put("message", "User not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
             Review updatedReview = reviewService.editReview(reviewId, user, rating, comment);
 
             response.put("message", "Review updated successfully");
             response.put("review", updatedReview);
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("Review not found")) {
-                response.put("message", "Review not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            } else if (e.getMessage().contains("You can only edit")) {
-                response.put("message", "You can only edit your own reviews");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            } else {
-                response.put("message", "Failed to update review: " + e.getMessage());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+
         } catch (Exception e) {
-            response.put("message", "An unexpected error occurred: " + e.getMessage());
+            response.put("message", "Failed to edit review: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -204,29 +217,33 @@ public class ReviewController {
     @DeleteMapping("delete/{reviewId}")
     public ResponseEntity<?> deleteReview(
             @PathVariable Long reviewId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        Map<String, String> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+
+        System.out.println("UserDetails: " + (userDetails != null ? userDetails.getUsername() : "null"));
 
         try {
+            if (userDetails == null) {
+                response.put("message", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            User user = userService.getUserByUsername(userDetails.getUsername());
+            if (user == null) {
+                response.put("message", "User not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
             reviewService.deleteReview(reviewId, user);
 
             response.put("message", "Review deleted successfully");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("Review not found")) {
-                response.put("message", "Review not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            } else if (e.getMessage().contains("You can only delete")) {
-                response.put("message", "You can only delete your own reviews");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            } else {
-                response.put("message", "Failed to delete review: " + e.getMessage());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            response.put("message", "An unexpected error occurred: " + e.getMessage());
+            response.put("message", "Failed to delete review: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
 }

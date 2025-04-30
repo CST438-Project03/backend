@@ -36,14 +36,16 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**","/api/lists/**","/api/games/**", "/api/reviews/**").permitAll()
-                .requestMatchers("/api/user/**").permitAll()
-                .requestMatchers("/api/user/current").authenticated()
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/**", "/api/lists/**", "/api/games/**").permitAll()
+                        .requestMatchers( "/api/reviews/**").permitAll() // Allow GETs only for reviews
+                        .requestMatchers("/api/reviews/edit/**", "/api/reviews/delete/**").authenticated() // Protect edit/delete
+                        .requestMatchers("/api/user/**").permitAll()
+                        .requestMatchers("/api/user/current").authenticated()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
