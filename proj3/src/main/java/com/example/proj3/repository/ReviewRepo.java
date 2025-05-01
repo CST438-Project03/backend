@@ -14,4 +14,6 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
     List<Review> findByVideoGame(VideoGame videoGame); // Find all reviews for a specific game
     List<Review> findByUser(User user); // Find all reviews by a specific user
     Optional<Review> findByUserAndVideoGame(User user, VideoGame videoGame); // to prevent duplicate reviews
+    List<Review> findByUserId(Long userId); // Find all reviews by a specific user
+
 }

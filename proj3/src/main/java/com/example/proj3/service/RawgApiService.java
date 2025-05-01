@@ -33,6 +33,25 @@ public class RawgApiService {
         return games;
     }
 
+    public List<VideoGame> searchGames(String query) {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = RAWG_API_URL + "?key=" + RAWG_API_KEY + "&search=" + query;
+
+        Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+        List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
+
+        List<VideoGame> games = new ArrayList<>();
+        for (Map<String, Object> result : results) {
+            VideoGame game = new VideoGame();
+            game.setRawgId(result.get("id").toString());
+            game.setTitle(result.get("name").toString());
+            game.setImageUrl(result.get("background_image") != null ? result.get("background_image").toString() : null);
+            games.add(game);
+        }
+
+        return games;
+    }
+
     public int getTotalGames() {
         RestTemplate restTemplate = new RestTemplate();
         String url = RAWG_API_URL + "?key=" + RAWG_API_KEY;

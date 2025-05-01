@@ -103,6 +103,7 @@ public class VideoGameController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "18") int pageSize
     ) {
+
         try {
             // Fetch games from RAWG API
             List<VideoGame> games = rawgApiService.fetchGamesFromRawg(page, pageSize);
@@ -117,6 +118,17 @@ public class VideoGameController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching games: " + e.getMessage());
+        }
+    }
+
+    //search games
+    @GetMapping("/search")
+    public ResponseEntity<?> searchGames(@RequestParam String query) {
+        try {
+            List<VideoGame> games = rawgApiService.searchGames(query);
+            return ResponseEntity.ok(games);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to search games: " + e.getMessage());
         }
     }
 }
