@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import static java.nio.file.Paths.get;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -396,6 +397,17 @@ public ResponseEntity<?> confirmPasswordReset(@RequestBody Map<String, String> r
     }
 }
 
+    // Search users by username
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam String query) {
+        try {
+            List<User> users = userService.searchUsersByUsername(query);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to search users: " + e.getMessage());
+        }
+    }
+
     
     // Delete user - admins or own user only
     @DeleteMapping("/deleteUser/{id}")
@@ -417,5 +429,37 @@ public ResponseEntity<?> confirmPasswordReset(@RequestBody Map<String, String> r
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    // Get all usernames
+    @GetMapping("/allUsernames")
+    public ResponseEntity<?> getAllUsernames() {
+        try {
+            List<String> usernames = userService.getAllUsernames();
+            return ResponseEntity.ok(usernames);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to fetch usernames: " + e.getMessage());
+        }
+    }
+
+    // Get user by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>("User not authenticated", HttpStatus.UNAUTHORIZED);
+        }
+
+        User currentUser = userService.getUserByUsername(principal.getName());
+        if (currentUser == null) {
+            return new ResponseEntity<>("Authenticated user not found", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Allow access to the requested user
+        User requestedUser = userService.getUserById(id);
+        if (requestedUser == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        return ResponseEntity.ok(requestedUser);
     }
 }

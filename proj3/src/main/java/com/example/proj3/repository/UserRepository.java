@@ -1,4 +1,3 @@
-
 package com.example.proj3.repository;
 
 import java.util.List;
@@ -22,4 +21,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByIsAdminTrue();
 
+    List<User> findByUsernameContainingIgnoreCase(String query);
 }
