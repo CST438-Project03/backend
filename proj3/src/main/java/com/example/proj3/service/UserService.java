@@ -1,5 +1,7 @@
 package com.example.proj3.service;
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -250,5 +252,26 @@ public class UserService {
         // This method doesn't need to do anything at the service level
         // JWT invalidation should be handled by the authentication service
         return true;
+    }
+
+    /**
+     * Searches for users by a partial username match.
+     *
+     * @param query The partial username to search for
+     * @return A list of users whose usernames match the query
+     */
+    public List<User> searchUsersByUsername(String query) {
+        return userRepository.findByUsernameContainingIgnoreCase(query);
+    }
+
+    /**
+     * Retrieves all usernames.
+     *
+     * @return A list of all usernames
+     */
+    public List<String> getAllUsernames() {
+        return userRepository.findAll().stream()
+                .map(User::getUsername)
+                .collect(Collectors.toList());
     }
 }
