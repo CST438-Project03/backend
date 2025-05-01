@@ -46,7 +46,7 @@ public class ReviewService {
     // Get all reviews created by a user
     public List<Review> getUserReviews(User user) {
 
-        return reviewRepo.findByUser(user);
+        return reviewRepo.findByUserId(user.getId());
     }
 
     public void deleteReview(Long reviewId, User user) {
