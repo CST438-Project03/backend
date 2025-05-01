@@ -103,6 +103,7 @@ public class VideoGameController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "18") int pageSize
     ) {
+
         try {
             // Fetch games from RAWG API
             List<VideoGame> games = rawgApiService.fetchGamesFromRawg(page, pageSize);

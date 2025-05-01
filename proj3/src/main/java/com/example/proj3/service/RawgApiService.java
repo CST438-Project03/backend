@@ -52,8 +52,6 @@ public class RawgApiService {
         return games;
     }
 
-
-
     public int getTotalGames() {
         RestTemplate restTemplate = new RestTemplate();
         String url = RAWG_API_URL + "?key=" + RAWG_API_KEY;

@@ -31,10 +31,18 @@ public class User {
 
     @NotNull(message = "Role is required")
     boolean isAdmin;
-    
 
     @Column(name = "profile_picture")
     private String profilePicture;
+
+    @Column(nullable = false)
+    private boolean isOAuthUser = false;
+    
+    @Column(nullable = true)
+    private String oauthProvider;
+    
+    @Column(nullable = true)
+    private String passwordSetDate;
 
     // Getters and Setters
 
@@ -84,5 +92,33 @@ public class User {
     
     public void setProfilePicture(String profilePicture) {
         this.profilePicture = profilePicture;
+    }
+
+        public boolean isOAuthUser() {
+        return isOAuthUser;
+    }
+    
+    public void setOAuthUser(boolean isOAuthUser) {
+        this.isOAuthUser = isOAuthUser;
+    }
+    
+    public String getOauthProvider() {
+        return oauthProvider;
+    }
+    
+    public void setOauthProvider(String oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+    
+    public String getPasswordSetDate() {
+        return passwordSetDate;
+    }
+    
+    public void setPasswordSetDate(String passwordSetDate) {
+        this.passwordSetDate = passwordSetDate;
+    }
+    
+    public boolean hasSetPassword() {
+        return passwordSetDate != null;
     }
 }
