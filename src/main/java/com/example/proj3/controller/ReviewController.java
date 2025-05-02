@@ -171,6 +171,7 @@ public class ReviewController {
 
 
     //edit reveiew
+    //edit reveiew
     @PutMapping("edit/{reviewId}")
     public ResponseEntity<?> editReview(
             @PathVariable Long reviewId,
@@ -179,17 +180,6 @@ public class ReviewController {
 
         Map<String, Object> response = new HashMap<>();
 
-        // Validate rating
-        if (rating == null || rating < 1 || rating > 10) {
-            response.put("message", "Rating must be between 1 and 5");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // Validate comment
-        if (comment == null || comment.trim().isEmpty()) {
-            response.put("message", "Comment cannot be empty");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
         System.out.println("UserDetails: " + (userDetails != null ? userDetails.getUsername() : "null"));
 
         try {
