@@ -57,7 +57,7 @@ public class UserService {
      * @return The user with the specified email, or null if not found
      */
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     /**
@@ -88,16 +88,16 @@ public class UserService {
      */
     @Transactional
     public boolean createUser(User user) {
-       try {
-           // Ensure password is encoded before saving
-           if (user.getPassword() != null) {
-               user.setPassword(user.getPassword());
-           }
-           userRepository.save(user);
-           return true;
-       } catch (Exception e) {
-           return false;
-       }
+    try {
+        // Ensure password is encoded before saving
+        if (user.getPassword() != null) {
+            user.setPassword(user.getPassword());
+        }
+        userRepository.save(user);
+        return true;
+    } catch (Exception e) {
+        return false;
+    }
     }
 
     /**
@@ -397,5 +397,51 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(User::getUsername)
                 .collect(Collectors.toList());
+    }
+
+    
+    /**
+    * Retrieves all users in the system.
+    * Required for the AdminController's getAllUsers() endpoint.
+    *
+    * @return A list of all users
+    */
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    /**
+     * Searches for users by username or email containing the query string.
+     * Required for the AdminController's searchUsers() endpoint.
+     *
+     * @param query The search query
+     * @return A list of users matching the search criteria
+     */
+    public List<User> searchUsers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return getAllUsers();
+        }
+        
+        String lowercaseQuery = query.toLowerCase();
+        return userRepository.findAll().stream()
+                .filter(user -> 
+                    user.getUsername().toLowerCase().contains(lowercaseQuery) ||
+                    (user.getEmail() != null && user.getEmail().toLowerCase().contains(lowercaseQuery)))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Saves a user to the database.
+     * Required for the AdminController's createUser() endpoint.
+     *
+     * @param user The user to save
+     * @return The saved user with its generated ID
+     */
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public User findByUsername(String currentUsername) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

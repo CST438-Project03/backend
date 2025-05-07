@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import static java.nio.file.Paths.get;
 import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -57,6 +60,7 @@ public class UserController {
             return new ResponseEntity<>("Failed to create user", HttpStatus.CONFLICT);
         }   
     }
+
 
 
     //gets the current user info
@@ -462,4 +466,39 @@ public ResponseEntity<?> confirmPasswordReset(@RequestBody Map<String, String> r
 
         return ResponseEntity.ok(requestedUser);
     }
+
+     // Delete user - admins or own user only
+    @DeleteMapping("/deleteUser")
+    public ResponseEntity<Void> deleteCurrentUser(Principal principal) {
+    // Get the current authenticated user
+    User currentUser = userService.getUserByUsername(principal.getName());
+    if (currentUser == null) {
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+    
+    // Delete the user
+    boolean success = userService.deleteUser(currentUser.getId());
+    if (success) {
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+}
+
+  @PostMapping("/deleteUserPost")
+public ResponseEntity<Map<String, String>> deleteCurrentUserPost(Principal principal) {
+    // Get the current authenticated user
+    User currentUser = userService.getUserByUsername(principal.getName());
+    if (currentUser == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("message", "Authentication required"));
+    }
+    
+    // Delete the user
+    boolean success = userService.deleteUser(currentUser.getId());
+    if (success) {
+        return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
+    }
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(Map.of("message", "Failed to delete account"));
+}
 }

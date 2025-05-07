@@ -16,8 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -31,47 +31,53 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException , IOException {
-                final String authHeader = request.getHeader("Authorization");
-
-                String username = null;
-                String jwt = null;
-
-                if(authHeader != null && authHeader.startsWith("Bearer ")) {
-                    jwt = authHeader.substring(7);
+            throws ServletException, IOException {
+        
+        // Skip preflight requests to avoid authentication issues with CORS
+        if (request.getMethod().equals("OPTIONS")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        logger.debug("Processing request: {} {}", request.getMethod(), request.getRequestURI());
+        
+        try {
+            String jwt = parseJwt(request);
+            if (jwt != null) {
+                String username = jwtUtil.extractUsername(jwt);
+                
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                     
-                    
-                    try {
-                        username = jwtUtil.extractUsername(jwt);
-                    } catch (Exception e) {
-                        logger.error("JWT token is invalid: {}", e.getMessage());
-                    }
-                } else {
-                    logger.warn("Authorization header is missing or does not start with 'Bearer '");
-                }
-
-                if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-                    try {
-
-                        if(jwtUtil.validateToken(jwt, userDetails)) {
-                            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-
-                            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                            SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                            logger.info("User authenticated: {}", username);
-                        } else {
-                            logger.warn("JWT token is invalid for user: {}", username);
-                        }
-                    } catch (Exception e) {
-                        logger.error("Error validating JWT token: {}", e.getMessage());
+                    if (jwtUtil.validateToken(jwt, userDetails)) {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
+                        
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        
+                        logger.info("Successfully authenticated user: {}", username);
+                    } else {
+                        logger.warn("Invalid JWT token for user: {}", username);
                     }
                 }
-                filterChain.doFilter(request, response);
+            }
+        } catch (Exception e) {
+            logger.error("Cannot set user authentication: {}", e.getMessage());
+            // Don't throw the exception, just log it and continue
+        }
+        
+        filterChain.doFilter(request, response);
     }
 
+    private String parseJwt(HttpServletRequest request) {
+        String headerAuth = request.getHeader("Authorization");
+
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+
+        return null;
+    }
 }

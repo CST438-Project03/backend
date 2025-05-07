@@ -180,6 +180,7 @@ public class ReviewController {
         Map<String, Object> response = new HashMap<>();
 
         // Extract rating and comment from JSON payload
+
         Integer rating = (Integer) payload.get("rating");
         String comment = (String) payload.get("comment");
 
@@ -203,6 +204,8 @@ public class ReviewController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
+
+        
             User user = userService.getUserByUsername(userDetails.getUsername());
             if (user == null) {
                 response.put("message", "User not found");
