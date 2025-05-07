@@ -45,23 +45,23 @@ public class AuthController {
 
     @GetMapping("/oauth2/redirect")
     public ResponseEntity<?> handleOAuthRedirect(@RequestParam String token) {
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("token", token);
         response.put("message", "Successfully authenticated via OAuth2");
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/oauth2/error")
     public ResponseEntity<?> handleOAuthError(@RequestParam String error) {
         Map<String, String> response = new HashMap<>();
         response.put("error", error);
-        
+
         return ResponseEntity.status(401).body(response);
     }
-    
-  @PostMapping("/login")
+
+    @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
         logger.info("User attempting to login: " + username);
         try {
@@ -113,8 +113,8 @@ public class AuthController {
         boolean success = userService.createUser(user);
 
         if(success) {
-             User createdUser = userService.getUserByUsername(username);
-              Map<String, Object> response = new HashMap<>();
+            User createdUser = userService.getUserByUsername(username);
+            Map<String, Object> response = new HashMap<>();
             response.put("id", createdUser.getId());
             response.put("username", createdUser.getUsername());
             response.put("email", createdUser.getEmail());
@@ -135,17 +135,17 @@ public class AuthController {
             String token = authHeader.substring(7);
             // Invalidate the token
             jwtUtil.invalidateToken(token);
-            }
-            
+        }
+
         // Clear security context
         SecurityContextHolder.clearContext();
         Map<String, String> response = new HashMap<>();
         response.put("message", "Successfully logged out!");
-            
+
         return ResponseEntity.ok(response);
     }
 
 
-    
-    
+
+
 }
