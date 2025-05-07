@@ -376,6 +376,7 @@ public class UserService {
         passwordResetTokenRepository.delete(resetToken);
         
         return true;
+    }
 
     /**
      * Searches for users by a partial username match.
@@ -396,6 +397,5 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(User::getUsername)
                 .collect(Collectors.toList());
-
     }
 }

@@ -179,9 +179,13 @@ public class ReviewController {
 
         Map<String, Object> response = new HashMap<>();
 
+        // Extract rating and comment from JSON payload
+        Integer rating = (Integer) payload.get("rating");
+        String comment = (String) payload.get("comment");
+
         // Validate rating
         if (rating == null || rating < 1 || rating > 10) {
-            response.put("message", "Rating must be between 1 and 5");
+            response.put("message", "Rating must be between 1 and 10");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
@@ -190,21 +194,13 @@ public class ReviewController {
             response.put("message", "Comment cannot be empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+
         System.out.println("UserDetails: " + (userDetails != null ? userDetails.getUsername() : "null"));
 
         try {
             if (userDetails == null) {
                 response.put("message", "User not authenticated");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-
-            // Extract rating and comment from JSON payload
-            Integer rating = (Integer) payload.get("rating");
-            String comment = (String) payload.get("comment");
-
-            if (rating == null || comment == null || comment.trim().isEmpty()) {
-                response.put("message", "Invalid rating or comment");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
             User user = userService.getUserByUsername(userDetails.getUsername());
