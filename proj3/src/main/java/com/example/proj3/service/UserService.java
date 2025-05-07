@@ -397,7 +397,6 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(User::getUsername)
                 .collect(Collectors.toList());
-
     }
 
     
