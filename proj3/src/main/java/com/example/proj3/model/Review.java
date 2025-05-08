@@ -85,11 +85,11 @@ public class Review {
         this.videoGame = videoGame;
     }
 
-    public double getRating() {
+    public int getRating() {
         return rating;
     }
 
-    public void setRating(double rating) {
+    public void setRating(int rating) {
         this.rating = rating;
     }
 

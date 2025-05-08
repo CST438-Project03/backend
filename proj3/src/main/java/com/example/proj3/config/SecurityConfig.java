@@ -87,6 +87,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:8081");
+        config.addAllowedOrigin("https://frontend-pi-nine-14.vercel.app");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.addAllowedMethod(HttpMethod.DELETE.name());
