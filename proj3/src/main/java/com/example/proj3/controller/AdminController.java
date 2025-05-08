@@ -42,9 +42,9 @@ public class AdminController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    public AdminController(UserService userService, UserRepository userRepository, 
-                         PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, 
-                         JwtUtil jwtUtil) {
+    public AdminController(UserService userService, UserRepository userRepository,
+                           PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager,
+                           JwtUtil jwtUtil) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -147,7 +147,7 @@ public class AdminController {
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Admin privileges granted successfully");
             response.put("user", user);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error granting admin privileges: " + e.getMessage());
@@ -177,7 +177,7 @@ public class AdminController {
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Admin privileges revoked successfully");
             response.put("user", user);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error revoking admin privileges: " + e.getMessage());
@@ -224,15 +224,15 @@ public class AdminController {
             if (userData.containsKey("username")) {
                 user.setUsername((String) userData.get("username"));
             }
-            
+
             if (userData.containsKey("email")) {
                 user.setEmail((String) userData.get("email"));
             }
-            
+
             if (userData.containsKey("admin")) {
                 user.setAdmin((Boolean) userData.get("admin"));
             }
-            
+
             // Only update password if provided
             if (userData.containsKey("password") && userData.get("password") != null) {
                 String newPassword = (String) userData.get("password");
@@ -260,7 +260,7 @@ public class AdminController {
             if (query == null || query.trim().isEmpty()) {
                 return getAllUsers();
             }
-            
+
             List<User> users = userService.searchUsers(query);
             return ResponseEntity.ok(users);
         } catch (Exception e) {
@@ -268,7 +268,7 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-    
+
     /**
      * Creates a new user account
      * Regular user accounts will never have admin privileges
@@ -281,12 +281,12 @@ public class AdminController {
             // Check if the current user is an admin
             User currentUser = null;
             boolean isCurrentUserAdmin = false;
-            
+
             if (principal != null) {
                 currentUser = userService.getUserByUsername(principal.getName());
                 isCurrentUserAdmin = currentUser != null && currentUser.isAdmin();
             }
-            
+
             String username = (String) userData.get("username");
             String email = (String) userData.get("email");
             String password = (String) userData.get("password");
@@ -298,14 +298,14 @@ public class AdminController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("message", "Username, email, and password are required"));
             }
-            
+
             // Check if user already exists
             if (userService.userExistsByUsername(username)) {
                 logger.warn("Username {} already exists", username);
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(Map.of("message", "Username already taken"));
             }
-            
+
             if (userService.userExistsByEmail(email)) {
                 logger.warn("Email {} already exists", email);
                 return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -317,35 +317,35 @@ public class AdminController {
             user.setUsername(username);
             user.setEmail(email);
             user.setPassword(passwordEncoder.encode(password));
-            
+
             // Only set admin privileges if the current user is an admin AND requested admin privileges
             boolean grantAdminPrivileges = isCurrentUserAdmin && requestedAdmin != null && requestedAdmin;
             user.setAdmin(grantAdminPrivileges);
-            
+
             // If not an admin request and admin privileges were requested, log this attempt
             if (requestedAdmin != null && requestedAdmin && !isCurrentUserAdmin) {
                 logger.warn("Non-admin user attempted to create account with admin privileges");
             }
-            
+
             // Set password date to track when password was set
             user.setPasswordSetDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-            
+
             // Set OAuth fields to false as this is a regular account
             user.setOAuthUser(false);
-            
+
             boolean success = userService.createUser(user);
-            
+
             if (success) {
                 User createdUser = userService.getUserByUsername(username);
-                
+
                 // Generate JWT token for immediate login
                 Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
+                        new UsernamePasswordAuthenticationToken(username, password)
                 );
-                
+
                 UserDetails userDetails = (UserDetails) authentication.getPrincipal();
                 String token = jwtUtil.generateToken(userDetails);
-                
+
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", createdUser.getId());
                 response.put("username", createdUser.getUsername());
@@ -353,7 +353,7 @@ public class AdminController {
                 response.put("isAdmin", createdUser.isAdmin());
                 response.put("jwtToken", token);
                 response.put("message", "User account created successfully");
-                
+
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
             } else {
                 logger.error("Failed to create user account");

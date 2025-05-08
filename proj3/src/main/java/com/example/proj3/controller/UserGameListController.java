@@ -35,6 +35,12 @@ public class UserGameListController {
         this.videoGameService = videoGameService;
     }
 
+    // Setter added for test injection
+    public void setUserRepository(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+
     //create lists
     @PostMapping("/createList")
     public ResponseEntity<?> createList(

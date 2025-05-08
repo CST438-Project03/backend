@@ -22,7 +22,7 @@ import jakarta.transaction.Transactional;
 public class UserService {
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -37,7 +37,7 @@ public class UserService {
      */
     public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
-    } 
+    }
 
     /**
      * Finds a user by their username.
@@ -57,7 +57,7 @@ public class UserService {
      * @return The user with the specified email, or null if not found
      */
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     /**
@@ -88,16 +88,16 @@ public class UserService {
      */
     @Transactional
     public boolean createUser(User user) {
-       try {
-           // Ensure password is encoded before saving
-           if (user.getPassword() != null) {
-               user.setPassword(user.getPassword());
-           }
-           userRepository.save(user);
-           return true;
-       } catch (Exception e) {
-           return false;
-       }
+        try {
+            // Ensure password is encoded before saving
+            if (user.getPassword() != null) {
+                user.setPassword(user.getPassword());
+            }
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -127,16 +127,16 @@ public class UserService {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isPresent()) {
             User updatedUser = userOpt.get();
-            
+
             // Update fields if they are provided
             if (user.getUsername() != null) {
                 updatedUser.setUsername(user.getUsername());
             }
-            
+
             if (user.getEmail() != null) {
                 updatedUser.setEmail(user.getEmail());
             }
-            
+
             // Only update password if it's provided and not already encoded
             if (user.getPassword() != null) {
                 // Check if password is already encoded - if it contains "$2a$" it's likely already a BCrypt hash
@@ -146,23 +146,23 @@ public class UserService {
                     updatedUser.setPassword(user.getPassword());
                 }
             }
-            
+
             // Only update admin status if it's explicitly set
             updatedUser.setAdmin(user.isAdmin());
-            
+
             // Update profile picture if provided
             if (user.getProfilePicture() != null) {
                 updatedUser.setProfilePicture(user.getProfilePicture());
             }
-            
+
             return userRepository.save(updatedUser);
         }
         return null;
-    }  
+    }
 
     /**
      * Updates a user's password after verifying the current password
-     * 
+     *
      * @param id User ID
      * @param currentPassword The current password for verification
      * @param newPassword The new password to set
@@ -171,19 +171,19 @@ public class UserService {
     @Transactional
     public boolean updatePassword(Long id, String currentPassword, String newPassword) {
         User user = getUserById(id);
-        
+
         if (user == null) {
             return false;
         }
-        
+
         // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             return false;
         }
-        
+
         // Set new password (encode it first)
         user.setPassword(passwordEncoder.encode(newPassword));
-        
+
         // Save user
         try {
             userRepository.save(user);
@@ -196,7 +196,7 @@ public class UserService {
     /**
      * Resets a user's password without requiring current password verification
      * This method should only be called by admins
-     * 
+     *
      * @param id The user ID
      * @param newPassword The new password to set
      * @return true if password was reset successfully, false otherwise
@@ -204,14 +204,14 @@ public class UserService {
     @Transactional
     public boolean resetPassword(Long id, String newPassword) {
         User user = getUserById(id);
-        
+
         if (user == null) {
             return false;
         }
-        
+
         // Set new password (encode it first)
         user.setPassword(passwordEncoder.encode(newPassword));
-        
+
         // Save user
         try {
             userRepository.save(user);
@@ -235,10 +235,10 @@ public class UserService {
         }
         return passwordEncoder.matches(password, user.getPassword());
     }
-    
+
     /**
      * Verify if the provided password matches the user's stored password
-     * 
+     *
      * @param user The user object
      * @param rawPassword The raw password to verify
      * @return true if password matches, false otherwise
@@ -264,7 +264,7 @@ public class UserService {
     }
     /**
      * Checks if a password matches for a specific user
-     * 
+     *
      * @param userId The user ID
      * @param password The password to check
      * @return true if the password matches, false otherwise
@@ -274,14 +274,14 @@ public class UserService {
         if (user == null) {
             return false;
         }
-        
+
         return passwordEncoder.matches(password, user.getPassword());
     }
-    
+
     /**
      * Sets a password and updates the passwordSetDate for a user
      * Used primarily for OAuth users setting a password for the first time
-     * 
+     *
      * @param userId The user ID
      * @param newPassword The new password to set
      * @return true if successful, false otherwise
@@ -292,10 +292,10 @@ public class UserService {
         if (user == null) {
             return false;
         }
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setPasswordSetDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-        
+
         try {
             userRepository.save(user);
             return true;
@@ -303,10 +303,10 @@ public class UserService {
             return false;
         }
     }
-    
+
     /**
      * Initiates a password reset request by creating a token
-     * 
+     *
      * @param email The email address of the user
      * @return true if the request was processed (even if the email doesn't exist)
      */
@@ -317,36 +317,36 @@ public class UserService {
             // Return true for security reasons (don't reveal if email exists)
             return true;
         }
-        
+
         // Generate a unique token
         String token = UUID.randomUUID().toString();
-        
+
         // Set expiration time (24 hours from now)
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
         Date expiryDate = calendar.getTime();
-        
+
         // Create or update reset token
         PasswordResetToken resetToken = passwordResetTokenRepository.findByUser(user);
         if (resetToken == null) {
             resetToken = new PasswordResetToken();
             resetToken.setUser(user);
         }
-        
+
         resetToken.setToken(token);
         resetToken.setExpiryDate(expiryDate);
         passwordResetTokenRepository.save(resetToken);
-        
+
         // Send email with reset link
         // TODO: Implement email sending logic
         // emailService.sendPasswordResetEmail(user.getEmail(), token);
-        
+
         return true;
     }
-    
+
     /**
      * Confirms a password reset using a token
-     * 
+     *
      * @param token The reset token
      * @param newPassword The new password to set
      * @return true if the reset was successful, false otherwise
@@ -377,7 +377,6 @@ public class UserService {
 
         return true;
     }
-
     /**
      * Searches for users by a partial username match.
      *
@@ -397,6 +396,51 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(User::getUsername)
                 .collect(Collectors.toList());
+    }
 
+
+    /**
+     * Retrieves all users in the system.
+     * Required for the AdminController's getAllUsers() endpoint.
+     *
+     * @return A list of all users
+     */
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    /**
+     * Searches for users by username or email containing the query string.
+     * Required for the AdminController's searchUsers() endpoint.
+     *
+     * @param query The search query
+     * @return A list of users matching the search criteria
+     */
+    public List<User> searchUsers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return getAllUsers();
+        }
+
+        String lowercaseQuery = query.toLowerCase();
+        return userRepository.findAll().stream()
+                .filter(user ->
+                        user.getUsername().toLowerCase().contains(lowercaseQuery) ||
+                                (user.getEmail() != null && user.getEmail().toLowerCase().contains(lowercaseQuery)))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Saves a user to the database.
+     * Required for the AdminController's createUser() endpoint.
+     *
+     * @param user The user to save
+     * @return The saved user with its generated ID
+     */
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public User findByUsername(String currentUsername) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
