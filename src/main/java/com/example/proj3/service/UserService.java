@@ -374,7 +374,6 @@ public class UserService {
 
         // Delete the used token
         passwordResetTokenRepository.delete(resetToken);
-
         return true;
     }
     /**
