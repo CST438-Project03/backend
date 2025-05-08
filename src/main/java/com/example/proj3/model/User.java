@@ -30,6 +30,7 @@ public class User {
     private String password;
 
     @NotNull(message = "Role is required")
+    @Column(name = "is_admin", nullable = false)
     boolean admin;
 
     @Column(name = "profile_picture")
