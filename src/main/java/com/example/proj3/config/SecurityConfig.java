@@ -27,6 +27,8 @@ import com.example.proj3.oauth.OAuth2AuthenticationFailureHandler;
 import com.example.proj3.oauth.OAuth2AuthenticationSuccessHandler;
 import com.example.proj3.service.UserService;
 
+import java.util.List;
+
 
 @Configuration
 @EnableWebSecurity
@@ -86,17 +88,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:8081");
-        config.addAllowedOrigin("https://frontend-pi-nine-14.vercel.app");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        config.addAllowedMethod(HttpMethod.DELETE.name());
-        config.setMaxAge(3600L); 
-        
+        config.setAllowedOrigins(List.of(
+                "http://localhost:8081",
+                "https://frontend-pi-nine-14.vercel.app"
+        ));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedMethods(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
