@@ -30,7 +30,7 @@ public class User {
     private String password;
 
     @NotNull(message = "Role is required")
-    boolean isAdmin;
+    boolean admin;
 
     @Column(name = "profile_picture")
     private String profilePicture;
@@ -79,11 +79,11 @@ public class User {
     }
 
     public boolean isAdmin() {
-        return isAdmin;
+        return admin;
     }
 
     public void setAdmin(boolean isAdmin) {
-        this.isAdmin = isAdmin;
+        this.admin = admin;
     }
     
     public String getProfilePicture() {
