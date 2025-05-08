@@ -1,15 +1,22 @@
 package com.example.proj3.service;
 
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.beans.factory.annotation.Autowired;
+
 import com.example.proj3.model.Review;
 import com.example.proj3.model.User;
 import com.example.proj3.model.VideoGame;
 import com.example.proj3.repository.ReviewRepo;
 import com.example.proj3.repository.VideoGameRepo;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class ReviewService {
@@ -77,5 +84,10 @@ public class ReviewService {
         review.setRating(newRating);
         review.setComment(newComment);
         return reviewRepo.save(review);
+    }
+
+    public List<Review> getRecentReviews(int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return reviewRepo.findRecent(pageable);
     }
 }

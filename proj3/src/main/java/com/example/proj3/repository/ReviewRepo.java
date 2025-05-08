@@ -1,10 +1,13 @@
 package com.example.proj3.repository;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
 import com.example.proj3.model.Review;
 import com.example.proj3.model.VideoGame;
 import com.example.proj3.model.User;
@@ -15,5 +18,7 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
     List<Review> findByUser(User user); // Find all reviews by a specific user
     Optional<Review> findByUserAndVideoGame(User user, VideoGame videoGame); // to prevent duplicate reviews
     List<Review> findByUserId(Long userId); // Find all reviews by a specific user
+    @Query("SELECT r FROM Review r ORDER BY r.createdAt DESC")
+    List<Review> findRecent(Pageable pageable);
 
 }

@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.*;
+import java.util.Date;
 
 @Entity
 public class Review {
@@ -19,7 +21,7 @@ public class Review {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id") // Foreign key to User
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
@@ -30,8 +32,18 @@ public class Review {
 
     private String comment;
 
-    public Review(){
 
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+
+    // Initialize timestamp when creating a review
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+    }
+
+    public Review() {
     }
 
     public Review(User user, VideoGame videoGame, int rating, String comment) {
@@ -41,7 +53,13 @@ public class Review {
         this.comment = comment;
     }
 
-    //setters and getters
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public Long getId() {
         return id;
@@ -67,11 +85,11 @@ public class Review {
         this.videoGame = videoGame;
     }
 
-    public int getRating() {
+    public double getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
+    public void setRating(double rating) {
         this.rating = rating;
     }
 

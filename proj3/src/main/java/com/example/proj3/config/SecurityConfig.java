@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**", "/api/lists/**", "/api/games/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers( "/api/reviews/**").permitAll() // Allow GETs only for reviews
+                        .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/api/reviews/edit/**", "/api/reviews/delete/**").authenticated() // Protect edit/delete
                         .requestMatchers("/api/user/**").permitAll()
                         .requestMatchers("/api/user/current").authenticated()
@@ -85,11 +86,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:8081"); // Your frontend URL
+        config.addAllowedOrigin("http://localhost:8081");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.addAllowedMethod(HttpMethod.DELETE.name());
-        config.setMaxAge(3600L); // Cache preflight responses for 1 hour
+        config.setMaxAge(3600L); 
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

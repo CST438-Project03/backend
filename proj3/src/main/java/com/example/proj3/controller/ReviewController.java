@@ -258,4 +258,21 @@ public class ReviewController {
         }
     }
 
+    @GetMapping("/recent")
+    public ResponseEntity<?> getRecentReviews(
+            @RequestParam(defaultValue = "10") int limit) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<Review> reviews = reviewService.getRecentReviews(limit);
+            
+            response.put("message", "Recent reviews retrieved successfully");
+            response.put("reviews", reviews);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Failed to get recent reviews: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }
