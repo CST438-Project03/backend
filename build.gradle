@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'  // Add JaCoCo plugin for test coverage reports
 }
 
 group = 'com.example'
@@ -33,20 +34,43 @@ dependencies {
 	// for .env file
 	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
-
 	//JWT security
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
 
-
-
 	// Database
 	runtimeOnly 'com.mysql:mysql-connector-j'
-
+	
+	// Testing specific dependencies
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2' 
+	testImplementation 'org.mockito:mockito-core'
+	testImplementation 'org.mockito:mockito-junit-jupiter'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport // Generate test coverage report after tests
+}
+
+// Configure JaCoCo test coverage report
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.8 
+			}
+		}
+	}
 }
