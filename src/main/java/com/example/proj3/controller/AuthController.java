@@ -1,10 +1,14 @@
 package com.example.proj3.controller;
 
+import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +22,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.example.proj3.config.JwtUtil;
 import com.example.proj3.model.User;
@@ -41,6 +49,70 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+    }
+
+     @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody Map<String, Object> userData) {
+        logger.info("Processing user registration request");
+        try {
+            String username = (String) userData.get("username");
+            String email = (String) userData.get("email");
+            String password = (String) userData.get("password");
+            
+            // Validate required fields
+            if (username == null || email == null || password == null) {
+                logger.warn("Missing required fields for user registration");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Username, email, and password are required"));
+            }
+            
+            // Check if user already exists
+            if (userService.userExistsByUsername(username)) {
+                logger.warn("Username {} already exists", username);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("message", "Username already taken"));
+            }
+            
+            if (userService.userExistsByEmail(email)) {
+                logger.warn("Email {} already exists", email);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("message", "Email already in use"));
+            }
+            
+            // Create the user
+            User user = new User();
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(password));
+            
+            // Regular users never get admin privileges
+            user.setAdmin(false);
+            
+            // Set password date
+            user.setPasswordSetDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+            
+            // Set OAuth fields
+            user.setOAuthUser(false);
+            
+            boolean success = userService.createUser(user);
+            
+            if (success) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("username", username);
+                response.put("email", email);
+                response.put("message", "Registration successful! Please login.");
+                
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            } else {
+                logger.error("Failed to register user");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("message", "Failed to create user account"));
+            }
+        } catch (Exception e) {
+            logger.error("Error during user registration: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error creating user account: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/oauth2/redirect")
