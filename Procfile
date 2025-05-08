@@ -1,1 +1,1 @@
-web: java -jar build/libs/proj3-0.0.1-SNAPSHOT.jar
+web: cd proj3 && ./gradlew bootRun
