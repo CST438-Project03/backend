@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**", "/api/lists/**", "/api/games/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers( "/api/reviews/**").permitAll() // Allow GETs only for reviews
+                        .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/api/reviews/edit/**", "/api/reviews/delete/**").authenticated() // Protect edit/delete
                         .requestMatchers("/api/user/**").permitAll()
                         .requestMatchers("/api/user/current").authenticated()
@@ -81,20 +82,23 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:8081"); // Your frontend URL
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        config.addAllowedMethod(HttpMethod.DELETE.name());
-        config.setMaxAge(3600L); // Cache preflight responses for 1 hour
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowCredentials(true);
+    // Add specific allowed origins
+    config.addAllowedOrigin("https://frontend-pi-nine-14.vercel.app");
+    config.addAllowedOrigin("http://localhost:8081");
+    config.addAllowedOrigin("http://localhost:19006");
+    
+    config.addAllowedHeader("*");
+    config.addAllowedMethod("*");
+    config.setMaxAge(3600L);
+    
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+}
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {

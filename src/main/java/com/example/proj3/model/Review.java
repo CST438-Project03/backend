@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.*;
+import java.util.Date;
 
 @Entity
 public class Review {
@@ -30,6 +32,16 @@ public class Review {
 
     private String comment;
 
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+
+    // Initialize timestamp when creating a review
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+    }
+
     public Review(){
 
     }
@@ -42,6 +54,14 @@ public class Review {
     }
 
     //setters and getters
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public Long getId() {
         return id;
@@ -66,7 +86,7 @@ public class Review {
     public void setVideoGame(VideoGame videoGame) {
         this.videoGame = videoGame;
     }
-
+    
     public int getRating() {
         return rating;
     }
