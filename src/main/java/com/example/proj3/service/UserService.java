@@ -354,30 +354,29 @@ public class UserService {
     @Transactional
     public boolean confirmPasswordReset(String token, String newPassword) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token);
-        
+
         // Check if token exists and is valid
         if (resetToken == null) {
             return false;
         }
-        
+
         // Check if token has expired
         if (resetToken.getExpiryDate().before(new Date())) {
             passwordResetTokenRepository.delete(resetToken);
             return false;
         }
-        
+
         // Update the user's password
         User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setPasswordSetDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
         userRepository.save(user);
-        
+
         // Delete the used token
         passwordResetTokenRepository.delete(resetToken);
-        
+
         return true;
     }
-
     /**
      * Searches for users by a partial username match.
      *
@@ -399,7 +398,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    
+
     /**
     * Retrieves all users in the system.
     * Required for the AdminController's getAllUsers() endpoint.
@@ -421,10 +420,10 @@ public class UserService {
         if (query == null || query.trim().isEmpty()) {
             return getAllUsers();
         }
-        
+
         String lowercaseQuery = query.toLowerCase();
         return userRepository.findAll().stream()
-                .filter(user -> 
+                .filter(user ->
                     user.getUsername().toLowerCase().contains(lowercaseQuery) ||
                     (user.getEmail() != null && user.getEmail().toLowerCase().contains(lowercaseQuery)))
                 .collect(Collectors.toList());

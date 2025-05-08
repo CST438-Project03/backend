@@ -93,7 +93,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             System.out.println("JWT token generated successfully");
             
             // Redirect to frontend with token
-            String frontendRedirectUrl = "http://localhost:8081/oauth-callback?token=" + token + 
+            String frontendRedirectUrl = "https://frontend-pi-nine-14.vercel.app/oauth-callback?token=" + token +
                                         "&userId=" + user.getId() + 
                                         "&username=" + user.getUsername();
             
@@ -106,7 +106,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             e.printStackTrace();
             
             // Redirect to login page with error
-            getRedirectStrategy().sendRedirect(request, response, "http://localhost:8081/login?error=oauth_failed");
+            getRedirectStrategy().sendRedirect(request, response, "https://frontend-pi-nine-14.vercel.app/login?error=oauth_failed");
         }
     }
     
