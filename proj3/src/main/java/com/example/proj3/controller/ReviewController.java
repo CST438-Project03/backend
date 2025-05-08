@@ -178,7 +178,8 @@ public class ReviewController {
             @RequestBody Map<String, Object> payload) {
 
         Map<String, Object> response = new HashMap<>();
-
+        Integer rating = (Integer) payload.get("rating");
+        String comment = (String) payload.get("comment");
         // Validate rating
         if (rating == null || rating < 1 || rating > 10) {
             response.put("message", "Rating must be between 1 and 5");
@@ -199,8 +200,8 @@ public class ReviewController {
             }
 
             // Extract rating and comment from JSON payload
-            Integer rating = (Integer) payload.get("rating");
-            String comment = (String) payload.get("comment");
+            // Integer rating = (Integer) payload.get("rating");
+            // String comment = (String) payload.get("comment");
 
             if (rating == null || comment == null || comment.trim().isEmpty()) {
                 response.put("message", "Invalid rating or comment");

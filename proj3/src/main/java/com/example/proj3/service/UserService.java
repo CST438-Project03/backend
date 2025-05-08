@@ -376,7 +376,7 @@ public class UserService {
         passwordResetTokenRepository.delete(resetToken);
         
         return true;
-
+    }
     /**
      * Searches for users by a partial username match.
      *
